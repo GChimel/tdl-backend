@@ -1,0 +1,11 @@
+services:
+  database:
+    image: postgres
+    container_name: loopt
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: todo
+    ports:
+      - '5432:5432'
