@@ -7,6 +7,7 @@ import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { TaskModule } from './modules/task/task.module';
 import { UsersModule } from './modules/users/users.module';
+import { env } from './shared/config/env';
 import { Task } from './shared/database/entities/task.entity';
 import { User } from './shared/database/entities/user.entity';
 
@@ -14,18 +15,18 @@ import { User } from './shared/database/entities/user.entity';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'root',
-      password: 'root',
-      database: 'todo',
+      host: env.databaseHost,
+      port: parseInt(env.databasePort),
+      username: env.databaseUser,
+      password: env.databasePassword,
+      database: env.databaseName,
       synchronize: true,
       entities: [User, Task],
     }),
     CacheModule.register({
       isGlobal: true,
       store: redisStore,
-      url: 'redis://localhost:6379',
+      url: `redis://${env.redisHost}:${env.redisPort}`,
     }),
     UsersModule,
     AuthModule,

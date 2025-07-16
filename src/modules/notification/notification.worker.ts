@@ -1,6 +1,7 @@
 import { RabbitMQModule, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger, Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { env } from 'src/shared/config/env';
 
 @Injectable()
 class NotificationConsumer {
@@ -18,7 +19,7 @@ class NotificationConsumer {
   imports: [
     RabbitMQModule.forRoot({
       exchanges: [],
-      uri: 'amqp://localhost:5672',
+      uri: `amqp://${env.rabbitmqHost}:${env.rabbitmqPort}`,
       connectionInitOptions: { wait: false },
     }),
   ],
