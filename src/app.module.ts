@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { Task } from './shared/database/entities/task.entity';
 import { User } from './shared/database/entities/user.entity';
+import { TaskModule } from './modules/task/task.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { User } from './shared/database/entities/user.entity';
     }),
     UsersModule,
     AuthModule,
+    TaskModule,
   ],
   controllers: [],
   providers: [
