@@ -9,8 +9,14 @@ services:
       POSTGRES_DB: todo
     ports:
       - '5432:5432'
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
       - '5672:5672'
       - '15672:15672'
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'

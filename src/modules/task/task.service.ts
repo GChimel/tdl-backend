@@ -1,5 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Cache } from 'cache-manager';
 import { Task, TaskStatus } from 'src/shared/database/entities/task.entity';
 import { User } from 'src/shared/database/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -15,7 +17,13 @@ export class TaskService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly notificationService: NotificationService,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
+
+  private getCacheKey(userId: string) {
+    return `tasks:${userId}`;
+  }
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
     const { description, title } = createTaskDto;
@@ -46,10 +54,18 @@ export class TaskService {
       createdAt: task.createdAt,
     });
 
+    // Invalida cache
+    await this.cacheManager.del(this.getCacheKey(userId));
+
     return;
   }
 
   async findAllByUserId(userId: string) {
+    const cacheKey = this.getCacheKey(userId);
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) {
+      return { tasks: cached };
+    }
     const tasks = await this.taskRepository.find({
       where: {
         user: {
@@ -57,7 +73,7 @@ export class TaskService {
         },
       },
     });
-
+    await this.cacheManager.set(cacheKey, tasks, 60); // 60 segundos
     return { tasks };
   }
 
@@ -76,8 +92,9 @@ export class TaskService {
     }
 
     const updatedTask = this.taskRepository.merge(task, updateTaskDto);
-
-    return this.taskRepository.save(updatedTask);
+    const result = await this.taskRepository.save(updatedTask);
+    await this.cacheManager.del(this.getCacheKey(userId));
+    return result;
   }
 
   async remove(userId: string, taskId: string) {
@@ -95,7 +112,7 @@ export class TaskService {
     }
 
     await this.taskRepository.remove(task);
-
+    await this.cacheManager.del(this.getCacheKey(userId));
     return null;
   }
 }
