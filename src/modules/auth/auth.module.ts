@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
   imports: [
     DatabaseModule,
     JwtModule.register({
+      global: true,
       secret: env.jwtSecret,
       signOptions: { expiresIn: '7d' },
     }),
