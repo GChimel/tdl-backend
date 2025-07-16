@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Task, TaskStatus } from 'src/shared/database/entities/task.entity';
 import { User } from 'src/shared/database/entities/user.entity';
 import { Repository } from 'typeorm';
+import { NotificationService } from '../notification/notification.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
@@ -13,6 +14,7 @@ export class TaskService {
     private readonly taskRepository: Repository<Task>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
@@ -33,7 +35,16 @@ export class TaskService {
       user,
     });
 
-    this.taskRepository.save(task);
+    await this.taskRepository.save(task);
+
+    // Notificar via RabbitMQ
+    await this.notificationService.notifyTaskCreated({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      userId: user.id,
+      createdAt: task.createdAt,
+    });
 
     return;
   }
