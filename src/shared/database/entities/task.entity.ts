@@ -5,6 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Project } from './project.entity';
 import { User } from './user.entity';
 
 export enum TaskStatus {
@@ -35,4 +36,10 @@ export class Task {
 
   @ManyToOne(() => User, (user) => user.tasks, { onDelete: 'CASCADE' })
   user: User;
+
+  @ManyToOne(() => Project, (project) => project.tasks, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  project: Project | null;
 }

@@ -5,9 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as redisStore from 'cache-manager-redis-store';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
+import { ProjectModule } from './modules/project/project.module';
 import { TaskModule } from './modules/task/task.module';
 import { UsersModule } from './modules/users/users.module';
 import { env } from './shared/config/env';
+import { Project } from './shared/database/entities/project.entity';
 import { Task } from './shared/database/entities/task.entity';
 import { User } from './shared/database/entities/user.entity';
 
@@ -21,7 +23,7 @@ import { User } from './shared/database/entities/user.entity';
       password: env.databasePassword,
       database: env.databaseName,
       synchronize: true,
-      entities: [User, Task],
+      entities: [User, Task, Project],
     }),
     CacheModule.register({
       isGlobal: true,
@@ -31,6 +33,7 @@ import { User } from './shared/database/entities/user.entity';
     UsersModule,
     AuthModule,
     TaskModule,
+    ProjectModule,
   ],
   controllers: [],
   providers: [

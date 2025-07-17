@@ -2,6 +2,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
+import { Project } from 'src/shared/database/entities/project.entity';
 import { Task, TaskStatus } from 'src/shared/database/entities/task.entity';
 import { User } from 'src/shared/database/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -14,6 +15,8 @@ export class TaskService {
   constructor(
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly notificationService: NotificationService,
@@ -26,14 +29,24 @@ export class TaskService {
   }
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
-    const { description, title } = createTaskDto;
+    const { description, title, projectId } = createTaskDto;
 
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
+    const user = await this.userRepository.findOneBy({
+      id: userId,
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
+    }
+
+    let project: Project | null = null;
+
+    if (projectId) {
+      project = await this.projectRepository.findOne({
+        where: { id: projectId, user: { id: userId } },
+      });
+
+      if (!project) throw new NotFoundException('Project not found');
     }
 
     const task = this.taskRepository.create({
@@ -41,11 +54,12 @@ export class TaskService {
       description,
       status: TaskStatus.PENDING,
       user,
+      project: project ? project : undefined,
     });
 
     await this.taskRepository.save(task);
 
-    // Notificar via RabbitMQ
+    // RabbitMQ
     await this.notificationService.notifyTaskCreated({
       id: task.id,
       title: task.title,
@@ -54,7 +68,7 @@ export class TaskService {
       createdAt: task.createdAt,
     });
 
-    // Invalida cache
+    // Invalidate cache
     await this.cacheManager.del(this.getCacheKey(userId));
 
     return;
@@ -66,44 +80,55 @@ export class TaskService {
     if (cached) {
       return { tasks: cached };
     }
-    const tasks = await this.taskRepository.find({
-      where: {
-        user: {
-          id: userId,
-        },
+    const tasks = await this.taskRepository.findBy({
+      user: {
+        id: userId,
       },
     });
-    await this.cacheManager.set(cacheKey, tasks, 60); // 60 segundos
+    await this.cacheManager.set(cacheKey, tasks, 60);
     return { tasks };
   }
 
   async update(userId: string, taskId: string, updateTaskDto: UpdateTaskDto) {
+    const { projectId, ...rest } = updateTaskDto;
+
     const task = await this.taskRepository.findOne({
-      where: {
-        id: taskId,
-        user: {
-          id: userId,
-        },
-      },
+      where: { id: taskId, user: { id: userId } },
+      relations: ['project'],
     });
 
     if (!task) {
       throw new NotFoundException('Task not found');
     }
 
-    const updatedTask = this.taskRepository.merge(task, updateTaskDto);
-    const result = await this.taskRepository.save(updatedTask);
+    if (Object.prototype.hasOwnProperty.call(updateTaskDto, 'projectId')) {
+      if (projectId === null) {
+        task.project = null;
+      } else if (projectId) {
+        const project = await this.projectRepository.findOne({
+          where: { id: projectId, user: { id: userId } },
+        });
+
+        if (!project) {
+          throw new NotFoundException('Project not found or unauthorized');
+        }
+
+        task.project = project;
+      }
+    }
+
+    Object.assign(task, rest);
+
+    const result = await this.taskRepository.save(task);
     await this.cacheManager.del(this.getCacheKey(userId));
     return result;
   }
 
   async remove(userId: string, taskId: string) {
-    const task = await this.taskRepository.findOne({
-      where: {
-        id: taskId,
-        user: {
-          id: userId,
-        },
+    const task = await this.taskRepository.findOneBy({
+      id: taskId,
+      user: {
+        id: userId,
       },
     });
 
