@@ -30,6 +30,14 @@ export class ProjectController {
     return this.projectService.findAllByUserId(userId);
   }
 
+  @Get(':id')
+  findById(
+    @ActiveUserId() userId: string,
+    @Param('id', ParseUUIDPipe) projectId: string,
+  ) {
+    return this.projectService.findById(userId, projectId);
+  }
+
   @Patch(':projectId')
   update(
     @Param('projectId', ParseUUIDPipe) projectId: string,

@@ -28,6 +28,14 @@ export class TaskController {
     return this.taskService.findAllByUserId(userId);
   }
 
+  @Get(':id')
+  findById(
+    @ActiveUserId() userId: string,
+    @Param('id', ParseUUIDPipe) taskId: string,
+  ) {
+    return this.taskService.findById(userId, taskId);
+  }
+
   @Patch(':taskId')
   update(
     @Param('taskId', ParseUUIDPipe) taskId: string,

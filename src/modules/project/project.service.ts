@@ -25,6 +25,7 @@ export class ProjectService {
 
     const project = this.projectRepository.create({
       ...createProjectDto,
+      createdAt: new Date(),
       user,
     });
 
@@ -32,13 +33,32 @@ export class ProjectService {
   }
 
   async findAllByUserId(userId: string) {
-    const projects = await this.projectRepository.findBy({
-      user: {
-        id: userId,
+    const projects = await this.projectRepository.find({
+      where: {
+        user: {
+          id: userId,
+        },
       },
+      relations: ['tasks'],
     });
 
     return { projects };
+  }
+
+  async findById(userId: string, projectId: string) {
+    const project = await this.projectRepository.findOne({
+      where: {
+        id: projectId,
+        user: {
+          id: userId,
+        },
+      },
+      relations: ['tasks'],
+    });
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+    return project;
   }
 
   async update(

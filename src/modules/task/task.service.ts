@@ -80,13 +80,36 @@ export class TaskService {
     if (cached) {
       return { tasks: cached };
     }
-    const tasks = await this.taskRepository.findBy({
-      user: {
-        id: userId,
+    const tasks = await this.taskRepository.find({
+      where: {
+        user: {
+          id: userId,
+        },
       },
+      relations: ['project'],
     });
-    await this.cacheManager.set(cacheKey, tasks, 60);
-    return { tasks };
+    const tasksWithProjectId = tasks.map((task) => ({
+      ...task,
+      project: task.project ? { id: task.project.id } : undefined,
+    }));
+    await this.cacheManager.set(cacheKey, tasksWithProjectId, 60);
+    return { tasks: tasksWithProjectId };
+  }
+
+  async findById(userId: string, taskId: string) {
+    const task = await this.taskRepository.findOne({
+      where: {
+        id: taskId,
+        user: {
+          id: userId,
+        },
+      },
+      relations: ['project'],
+    });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+    return task;
   }
 
   async update(userId: string, taskId: string, updateTaskDto: UpdateTaskDto) {
