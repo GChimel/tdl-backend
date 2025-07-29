@@ -24,7 +24,7 @@ API backend para gerenciamento de tarefas (Todo List) com autenticação JWT, no
 1. Clone o repositório:
 
 ```bash
-git clone https://github.com/GChimel/loopt-back
+git clone https://github.com/GChimel/tdl-backend
 cd back-end
 ```
 
@@ -44,7 +44,7 @@ A documentação Swagger estará em `http://localhost:3000/api`
 1. Clone o repositório:
 
 ```bash
-git clone https://github.com/GChimel/loopt-back
+git clone https://github.com/GChimel/tdl-backend
 cd back-end
 ```
 
@@ -147,7 +147,3 @@ A documentação Swagger estará em `http://localhost:3000/api`
 - Docker Compose
 - JWT Auth
 - Swagger
-
----
-
-**Desafio Técnico Full Stack — Loopt**

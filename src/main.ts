@@ -13,7 +13,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Todo List API')
-    .setDescription('API documentation for the Todo List challenge')
+    .setDescription('API documentation for the Todo List')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
