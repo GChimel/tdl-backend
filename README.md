@@ -25,7 +25,7 @@ API backend para gerenciamento de tarefas (Todo List) com autenticação JWT, no
 
 ```bash
 git clone https://github.com/GChimel/tdl-backend
-cd back-end
+cd tdl-backend
 ```
 
 2. As variáveis de ambiente já estão configuradas no arquivo `docker-compose.yml`. Se necessário, altere o valor de `JWT_SECRET` para um segredo forte.
@@ -45,7 +45,7 @@ A documentação Swagger estará em `http://localhost:3000/api`
 
 ```bash
 git clone https://github.com/GChimel/tdl-backend
-cd back-end
+cd tdl-backend
 ```
 
 2. Instale o PostgreSQL, Redis e RabbitMQ em sua máquina:
